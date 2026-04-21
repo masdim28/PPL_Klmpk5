@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tambah Koleksi | Admin Ade Afwa</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <style>
+        /* Penyesuaian agar senada dengan UI Anda */
+        .ts-control { border-radius: 0.75rem !important; padding: 0.75rem !important; border-color: #e5e7eb !important; }
+        .ts-control .item { background-color: #4338ca !important; color: white !important; border-radius: 0.5rem !important; }
+    </style>
 </head>
 <body class="bg-gray-100 flex">
 
@@ -56,25 +63,17 @@
 
                     <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Kategori</label>
-                            <select name="category_id" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none" required>
-                                <option value="">-- Pilih Kategori --</option>
-                                
-                                {{-- Menampilkan kategori dengan struktur Parent > Child --}}
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Kategori (Bisa pilih 2-3)</label>
+                            <select id="category-select" name="category_ids[]" multiple placeholder="Pilih kategori..." class="w-full" required autocomplete="off">
                                 @foreach($categories as $parent)
-                                    <optgroup label="📂 {{ strtoupper($parent->name) }}">
-                                        {{-- Opsi untuk memilih kategori utama --}}
-                                        <option value="{{ $parent->id }}" {{ old('category_id') == $parent->id ? 'selected' : '' }}>
-                                            {{ $parent->name }} (Utama)
+                                    <option value="{{ $parent->id }}" {{ (collect(old('category_ids'))->contains($parent->id)) ? 'selected' : '' }}>
+                                        📂 {{ strtoupper($parent->name) }} (Utama)
+                                    </option>
+                                    @foreach($parent->children as $child)
+                                        <option value="{{ $child->id }}" {{ (collect(old('category_ids'))->contains($child->id)) ? 'selected' : '' }}>
+                                            └─ {{ $child->name }}
                                         </option>
-                                        
-                                        {{-- Loop untuk anak kategori --}}
-                                        @foreach($parent->children as $child)
-                                            <option value="{{ $child->id }}" {{ old('category_id') == $child->id ? 'selected' : '' }}>
-                                                └─ {{ $child->name }}
-                                            </option>
-                                        @endforeach
-                                    </optgroup>
+                                    @endforeach
                                 @endforeach
                             </select>
                         </div>
@@ -105,5 +104,15 @@
             </div>
         </div>
     </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script>
+        new TomSelect("#category-select", {
+            maxItems: 3, // Batasi maksimal 3 kategori agar tidak berlebihan
+            plugins: ['remove_button'], // Tombol 'x' untuk menghapus pilihan
+            persist: false,
+            create: false,
+        });
+    </script>
 </body>
 </html>

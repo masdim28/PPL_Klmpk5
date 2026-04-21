@@ -17,11 +17,10 @@ class Category extends Model
     /**
      * Relasi: Satu kategori memiliki banyak produk.
      */
-    public function products(): HasMany
-    {
-        return $this->hasMany(Product::class);
-    }
-
+    public function products()
+{
+    return $this->belongsToMany(Product::class, 'category_product');
+}
     /**
      * Relasi ke Anak Kategori (Sub-Kategori)
      * Contoh: HIJAB memiliki banyak sub seperti Pashmina, Bergo, dll.

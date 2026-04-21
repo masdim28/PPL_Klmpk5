@@ -13,9 +13,7 @@ return new class extends Migration
 {
     Schema::create('category_product', function (Blueprint $table) {
         $table->id();
-        // Menghubungkan ke tabel products
         $table->foreignId('product_id')->constrained()->onDelete('cascade');
-        // Menghubungkan ke tabel categories
         $table->foreignId('category_id')->constrained()->onDelete('cascade');
         $table->timestamps();
     });

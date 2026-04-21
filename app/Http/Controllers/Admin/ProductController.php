@@ -15,8 +15,8 @@ class ProductController extends Controller
      */
     public function index()
     {
-        // Tetap sama: Mengambil produk terbaru beserta data kategorinya
-        $products = Product::with('category')->latest()->get();
+        // Mengambil produk terbaru beserta data kategori jamak (many-to-many)
+        $products = Product::with('categories')->latest()->get(); 
         return view('admin.products.index', compact('products'));
     }
 
@@ -25,8 +25,7 @@ class ProductController extends Controller
      */
     public function create()
     {
-        // OPTIMASI: Ambil kategori utama (parent) beserta anak-anaknya (children)
-        // agar di form dropdown bisa kita tampilkan secara hierarkis
+        // Mengambil kategori untuk ditampilkan di checkbox
         $categories = Category::whereNull('parent_id')->with('children')->get(); 
         return view('admin.products.create', compact('categories'));
     }
@@ -37,26 +36,34 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'        => 'required',
-            'price'       => 'required|numeric',
-            'stock'       => 'required|numeric',
-            'category_id' => 'required|exists:categories,id', // Tambahkan validasi exists
-            'image'       => 'required|image|mimes:jpeg,png,jpg|max:2048'
+            'name'         => 'required',
+            'price'        => 'required|numeric',
+            'stock'        => 'required|numeric',
+            'category_ids' => 'required|array', // Validasi array untuk banyak kategori
+            'category_ids.*' => 'exists:categories,id',
+            'image'        => 'required|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
         $imagePath = $request->file('image')->store('products', 'public'); 
 
-        Product::create([
+        // 1. Buat Produk
+        $product = Product::create([
             'name'        => $request->name,
             'description' => $request->description,
             'price'       => $request->price,
             'stock'       => $request->stock,
             'status'      => $request->status,
-            'category_id' => $request->category_id,
             'image'       => $imagePath,
+            // Opsional: Simpan kategori pertama sebagai kategori utama di kolom lama
+            'category_id' => $request->category_ids[0], 
         ]);
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan');
+        // 2. Simpan hubungan Many-to-Many ke tabel pivot
+        if ($request->has('category_ids')) {
+            $product->categories()->attach($request->category_ids);
+        }
+
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan ke berbagai kategori');
     }
 
     /**
@@ -64,8 +71,8 @@ class ProductController extends Controller
      */
     public function edit($id)
     {
-        $product = Product::findOrFail($id);
-        // OPTIMASI: Gunakan hierarki yang sama untuk edit
+        // Load produk beserta kategori yang sudah dipilih sebelumnya
+        $product = Product::with('categories')->findOrFail($id);
         $categories = Category::whereNull('parent_id')->with('children')->get();
 
         return view('admin.products.edit', compact('product', 'categories'));
@@ -77,16 +84,15 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name'        => 'required',
-            'price'       => 'required|numeric',
-            'stock'       => 'required|numeric',
-            'category_id' => 'required|exists:categories,id'
+            'name'         => 'required',
+            'price'        => 'required|numeric',
+            'stock'        => 'required|numeric',
+            'category_ids' => 'required|array'
         ]);
 
         $product = Product::findOrFail($id);
 
         if ($request->hasFile('image')) {
-            // REKOMENDASI: Aktifkan hapus gambar lama agar storage AWS EC2 kamu tidak penuh
             if($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
@@ -95,30 +101,42 @@ class ProductController extends Controller
             $imagePath = $product->image;
         }
 
+        // 1. Update data dasar produk
         $product->update([
             'name'        => $request->name,
             'description' => $request->description,
             'price'       => $request->price,
             'stock'       => $request->stock,
             'status'      => $request->status,
-            'category_id' => $request->category_id,
+            'category_id' => $request->category_ids[0], // Update kategori utama
             'image'       => $imagePath,
         ]);
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diupdate');
+        // 2. Sinkronisasi Kategori (Hapus yang lama, tambah yang baru dicentang)
+        if ($request->has('category_ids')) {
+            $product->categories()->sync($request->category_ids);
+        }
+
+        return redirect()->route('admin.products.index')->with('success', 'Data koleksi berhasil diperbarui');
     }
 
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
         
-        // REKOMENDASI: Aktifkan hapus file agar storage tetap bersih
         if($product->image) {
             Storage::disk('public')->delete($product->image);
         }
 
+        // Menghapus hubungan di tabel pivot secara otomatis jika onDelete('cascade') aktif
         $product->delete();
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus');
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus dari sistem');
     }
+   public function show($id)
+{
+    // Mengambil produk beserta kategori jamaknya agar bisa ditampilkan di detail
+    $product = Product::with('categories')->findOrFail($id);
+    return view('admin.products.detail', compact('product'));
+}
 }
