@@ -86,13 +86,45 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Update Foto Produk</label>
-                            <div class="flex items-center space-x-6 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                                <img src="{{ asset('storage/' . $product->image) }}" class="w-20 h-20 object-cover rounded-xl shadow-sm border-2 border-white">
-                                <input type="file" name="image" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer">
-                            </div>
+    <div>
+        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Update Foto Produk (Bisa Pilih 1-5 Foto)</label>
+        <div class="p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+            <div class="flex flex-wrap gap-2 mb-4">
+                @foreach($product->images as $img)
+                    <div class="relative group">
+                        <img src="{{ asset('storage/' . $img->image_path) }}" 
+                             class="w-16 h-16 object-cover rounded-lg shadow-sm border border-white">
+                        <div class="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="text-[8px] text-white font-bold uppercase">Stored</span>
                         </div>
+                    </div>
+                @endforeach
+            </div>
+            
+            <input type="file" name="images[]" multiple 
+                   class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer">
+            <p class="mt-2 text-[9px] text-gray-400 italic leading-tight">
+                * Tahan tombol 'Ctrl' untuk memilih lebih dari 1 foto. <br>
+                * Mengunggah foto baru akan mengganti seluruh galeri lama.
+            </p>
+        </div>
+    </div>
+
+    <div>
+        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Status Ketersediaan</label>
+        <div class="relative">
+            <select name="status" class="w-full px-5 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-gray-700 font-bold appearance-none cursor-pointer">
+                <option value="ready" {{ $product->status == 'ready' ? 'selected' : '' }}>🟢 READY STOCK</option>
+                <option value="sold_out" {{ $product->status == 'sold_out' ? 'selected' : '' }}>🔴 SOLD OUT</option>
+            </select>
+            <div class="absolute inset-y-0 right-5 flex items-center pointer-events-none">
+                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
 
                         <div>
                             <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Status Ketersediaan</label>

@@ -29,59 +29,80 @@
             </a>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden max-w-5xl mx-auto">
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden max-w-6xl mx-auto">
             <div class="md:flex">
-                <div class="md:w-2/5 p-8 bg-gray-50 flex flex-col items-center justify-center border-r border-gray-100">
-                    <img src="{{ asset('storage/' . $product->image) }}" 
-                         class="w-full rounded-2xl shadow-lg border-4 border-white object-cover aspect-square mb-4"
-                         alt="{{ $product->name }}">
+                <div class="md:w-1/2 p-8 bg-gray-50 border-r border-gray-100">
+                    <div class="mb-6">
+                        <img src="{{ asset('storage/' . $product->image) }}" 
+                             id="mainImage"
+                             class="w-full rounded-2xl shadow-lg border-4 border-white object-cover aspect-square"
+                             alt="{{ $product->name }}">
+                    </div>
                     
-                    <span class="px-6 py-2 rounded-full font-bold uppercase text-xs tracking-widest {{ $product->status == 'ready' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                        Status: {{ $product->status }}
-                    </span>
+                    <div class="flex flex-wrap gap-3 justify-center">
+                        {{-- Menampilkan semua gambar dari relasi images --}}
+                        @foreach($product->images as $img)
+                            <img src="{{ asset('storage/' . $img->image_path) }}" 
+                                 onclick="changeImage('{{ asset('storage/' . $img->image_path) }}')"
+                                 class="w-20 h-20 rounded-xl cursor-pointer hover:ring-4 hover:ring-indigo-500 transition-all border-2 border-white shadow-sm object-cover">
+                        @endforeach
+                    </div>
+                    <p class="text-center text-[10px] text-gray-400 mt-4 italic font-medium uppercase tracking-widest">Klik gambar kecil untuk memperbesar</p>
                 </div>
 
-                <div class="md:w-3/5 p-10">
+                <div class="md:w-1/2 p-10">
                     <div class="mb-6">
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Nama Koleksi</label>
-                        <h2 class="text-4xl font-black text-indigo-900 mt-1">{{ $product->name }}</h2>
+                        <h2 class="text-4xl font-black text-indigo-900 mt-1 uppercase">{{ $product->name }}</h2>
                     </div>
 
                     <div class="grid grid-cols-2 gap-8 mb-8">
                         <div>
-                            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Harga Satuan</label>
-                            <p class="text-2xl font-bold text-gray-800">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Harga Jual</label>
+                            <p class="text-2xl font-black text-indigo-600">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
                         </div>
                         <div>
-                            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Stok Tersedia</label>
-                            <p class="text-2xl font-bold text-gray-800">{{ $product->stock }} <span class="text-sm font-normal text-gray-400">Pcs</span></p>
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Stok Barang</label>
+                            <p class="text-2xl font-black text-gray-800">{{ $product->stock }} <span class="text-sm font-normal text-gray-400">Pcs</span></p>
                         </div>
                     </div>
 
                     <div class="mb-8">
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 block">Kategori Terkait</label>
+                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 block">Kategori Produk</label>
                         <div class="flex flex-wrap gap-2">
-                            {{-- Perbaikan: Menampilkan banyak kategori dari tabel pivot --}}
                             @forelse($product->categories as $category)
-                                <span class="px-4 py-1.5 bg-indigo-50 text-indigo-600 text-xs rounded-lg font-bold border border-indigo-100 uppercase">
+                                <span class="px-4 py-1.5 bg-indigo-50 text-indigo-600 text-[10px] rounded-lg font-black border border-indigo-100 uppercase tracking-wider">
                                     {{ $category->name }}
                                 </span>
                             @empty
-                                <span class="text-gray-400 italic text-sm">Belum ada kategori terpilih</span>
+                                <span class="text-gray-400 italic text-sm">Tanpa kategori</span>
                             @endforelse
                         </div>
                     </div>
 
+                    <div class="mb-8">
+                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Status Ketersediaan</label>
+                        <span class="inline-flex items-center px-4 py-2 rounded-xl font-bold uppercase text-xs tracking-widest {{ $product->status == 'ready' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                            {{ $product->status == 'ready' ? '🟢 Ready Stock' : '🔴 Sold Out' }}
+                        </span>
+                    </div>
+
                     <div class="pt-8 border-t border-gray-100">
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Deskripsi Lengkap</label>
-                        <p class="text-gray-600 leading-relaxed italic">
-                            "{{ $product->description ?: 'Admin belum menambahkan deskripsi untuk produk ini.' }}"
+                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Deskripsi Produk</label>
+                        <p class="text-gray-600 leading-relaxed">
+                            {{ $product->description ?: 'Tidak ada deskripsi.' }}
                         </p>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+
+    <script>
+        function changeImage(path) {
+            document.getElementById('mainImage').src = path;
+        }
+    </script>
 
 </body>
 </html>

@@ -6,137 +6,144 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\ProductImage; // Tambahkan ini
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    /**
-     * Tampilkan daftar produk di halaman admin.
-     */
     public function index()
     {
-        // Mengambil produk terbaru beserta data kategori jamak (many-to-many)
         $products = Product::with('categories')->latest()->get(); 
         return view('admin.products.index', compact('products'));
     }
 
-    /**
-     * Tampilkan form untuk menambah produk baru.
-     */
     public function create()
     {
-        // Mengambil kategori untuk ditampilkan di checkbox
         $categories = Category::whereNull('parent_id')->with('children')->get(); 
         return view('admin.products.create', compact('categories'));
     }
 
-    /**
-     * Simpan produk baru ke database.
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'name'         => 'required',
-            'price'        => 'required|numeric',
-            'stock'        => 'required|numeric',
-            'category_ids' => 'required|array', // Validasi array untuk banyak kategori
+            'name'           => 'required',
+            'price'          => 'required|numeric',
+            'stock'          => 'required|numeric',
+            'category_ids'   => 'required|array',
             'category_ids.*' => 'exists:categories,id',
-            'image'        => 'required|image|mimes:jpeg,png,jpg|max:2048'
+            'images'         => 'required|array|min:1|max:5', // Validasi minimal 1, maksimal 5
+            'images.*'       => 'image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
-        $imagePath = $request->file('image')->store('products', 'public'); 
-
-        // 1. Buat Produk
+        // 1. Buat Produk Dasar
         $product = Product::create([
             'name'        => $request->name,
             'description' => $request->description,
             'price'       => $request->price,
             'stock'       => $request->stock,
             'status'      => $request->status,
-            'image'       => $imagePath,
-            // Opsional: Simpan kategori pertama sebagai kategori utama di kolom lama
             'category_id' => $request->category_ids[0], 
         ]);
 
-        // 2. Simpan hubungan Many-to-Many ke tabel pivot
-        if ($request->has('category_ids')) {
-            $product->categories()->attach($request->category_ids);
+        // 2. Simpan Relasi Kategori (Many-to-Many)
+        $product->categories()->attach($request->category_ids);
+
+        // 3. Simpan Banyak Gambar
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $index => $file) {
+                $path = $file->store('products', 'public');
+
+                // Gambar pertama (index 0) disimpan sebagai thumbnail utama di tabel products
+                if ($index === 0) {
+                    $product->update(['image' => $path]);
+                }
+
+                // Simpan semua gambar ke tabel product_images
+                $product->images()->create([
+                    'image_path' => $path
+                ]);
+            }
         }
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan ke berbagai kategori');
+        return redirect()->route('admin.products.index')->with('success', 'Produk dan galeri berhasil ditambahkan');
     }
 
-    /**
-     * Tampilkan form untuk mengedit produk.
-     */
     public function edit($id)
     {
-        // Load produk beserta kategori yang sudah dipilih sebelumnya
-        $product = Product::with('categories')->findOrFail($id);
+        // Sertakan relasi images agar bisa dilihat di form edit
+        $product = Product::with(['categories', 'images'])->findOrFail($id);
         $categories = Category::whereNull('parent_id')->with('children')->get();
 
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
-    /**
-     * Update data produk di database.
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
             'name'         => 'required',
             'price'        => 'required|numeric',
             'stock'        => 'required|numeric',
-            'category_ids' => 'required|array'
+            'category_ids' => 'required|array',
+            'images.*'     => 'image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
         $product = Product::findOrFail($id);
 
-        if ($request->hasFile('image')) {
-            if($product->image) {
-                Storage::disk('public')->delete($product->image);
-            }
-            $imagePath = $request->file('image')->store('products', 'public');
-        } else {
-            $imagePath = $product->image;
-        }
-
-        // 1. Update data dasar produk
+        // Update data dasar
         $product->update([
             'name'        => $request->name,
             'description' => $request->description,
             'price'       => $request->price,
             'stock'       => $request->stock,
             'status'      => $request->status,
-            'category_id' => $request->category_ids[0], // Update kategori utama
-            'image'       => $imagePath,
+            'category_id' => $request->category_ids[0],
         ]);
 
-        // 2. Sinkronisasi Kategori (Hapus yang lama, tambah yang baru dicentang)
-        if ($request->has('category_ids')) {
-            $product->categories()->sync($request->category_ids);
+        // Sync Kategori
+        $product->categories()->sync($request->category_ids);
+
+        // Jika ada unggahan gambar baru
+        if ($request->hasFile('images')) {
+            // Opsional: Hapus gambar lama jika ingin mengganti total
+            foreach ($product->images as $oldImage) {
+                Storage::disk('public')->delete($oldImage->image_path);
+            }
+            $product->images()->delete();
+
+            // Simpan gambar-gambar baru
+            foreach ($request->file('images') as $index => $file) {
+                $path = $file->store('products', 'public');
+                
+                if ($index === 0) {
+                    $product->update(['image' => $path]);
+                }
+
+                $product->images()->create(['image_path' => $path]);
+            }
         }
 
-        return redirect()->route('admin.products.index')->with('success', 'Data koleksi berhasil diperbarui');
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diperbarui');
     }
 
     public function destroy($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with('images')->findOrFail($id);
         
-        if($product->image) {
-            Storage::disk('public')->delete($product->image);
+        // Hapus semua file gambar fisik dari storage
+        foreach ($product->images as $img) {
+            Storage::disk('public')->delete($img->image_path);
         }
 
-        // Menghapus hubungan di tabel pivot secara otomatis jika onDelete('cascade') aktif
+        // Relasi product_images akan terhapus otomatis jika Anda pakai onDelete('cascade') di migrasi
         $product->delete();
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus dari sistem');
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus');
     }
-   public function show($id)
-{
-    // Mengambil produk beserta kategori jamaknya agar bisa ditampilkan di detail
-    $product = Product::with('categories')->findOrFail($id);
-    return view('admin.products.detail', compact('product'));
-}
+
+    public function show($id)
+    {
+        // Load categories dan images untuk ditampilkan di halaman detail
+        $product = Product::with(['categories', 'images'])->findOrFail($id);
+        return view('admin.products.detail', compact('product'));
+    }
 }

@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="py-12 bg-[#FDF9F0] min-h-screen">
+    <div class="py-12 bg-[#F1FBFD] min-h-screen">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <div class="mb-8">
@@ -14,12 +14,26 @@
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
                 <div class="grid grid-cols-1 md:grid-cols-2">
                     
-                    <div class="relative group bg-gray-50">
-                        <img src="{{ asset('storage/' . $product->image) }}" 
-                             alt="{{ $product->name }}" 
-                             class="w-full h-full object-cover aspect-[3/4] md:aspect-auto">
-                        <div class="absolute top-6 left-6 bg-[#CFB53B] text-white px-4 py-1 text-[10px] font-bold uppercase tracking-widest shadow-sm">
-                            Koleksi Eksklusif
+                    <div class="bg-gray-50 p-4">
+                        <div class="relative group">
+                            <img id="main-display-image" 
+                                 src="{{ asset('storage/' . $product->image) }}" 
+                                 alt="{{ $product->name }}" 
+                                 class="w-full h-full object-cover aspect-[3/4] rounded-xl shadow-sm transition-all duration-300">
+                            
+                            <div class="absolute top-6 left-6 bg-[#CFB53B] text-white px-4 py-1 text-[10px] font-bold uppercase tracking-widest shadow-sm">
+                                Koleksi Eksklusif
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3 mt-4 overflow-x-auto pb-2 scrollbar-hide">
+                            @foreach($product->images as $img)
+                                <div class="flex-shrink-0 cursor-pointer group" onclick="updateMainImage('{{ asset('storage/' . $img->image_path) }}')">
+                                    <img src="{{ asset('storage/' . $img->image_path) }}" 
+                                         class="w-20 h-24 object-cover rounded-lg border-2 border-transparent group-hover:border-[#CFB53B] transition-all shadow-sm"
+                                         alt="Thumbnail {{ $product->name }}">
+                                </div>
+                            @endforeach
                         </div>
                     </div>
 
@@ -33,6 +47,14 @@
                             </p>
                         </div>
 
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            @foreach($product->categories as $category)
+                                <span class="text-[9px] font-bold uppercase tracking-widest bg-[#F1FBFD] text-[#CFB53B] px-3 py-1 border border-[#CFB53B]/10 rounded">
+                                    {{ $category->name }}
+                                </span>
+                            @endforeach
+                        </div>
+
                         <div class="border-t border-gray-100 pt-8 mb-8">
                             <h3 class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-4">Deskripsi Produk</h3>
                             <p class="text-gray-600 leading-relaxed text-sm italic">
@@ -41,7 +63,7 @@
                         </div>
 
                         <div class="flex items-center gap-4 mb-10">
-                            <div class="bg-[#FDF9F0] border border-[#CFB53B]/20 px-5 py-3 rounded-lg">
+                            <div class="bg-[#F1FBFD] border border-[#CFB53B]/20 px-5 py-3 rounded-lg">
                                 <span class="text-[9px] text-[#CFB53B] uppercase block font-bold tracking-widest mb-1">Status Ketersediaan</span>
                                 <span class="text-gray-800 font-bold flex items-center gap-2">
                                     <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
@@ -74,4 +96,15 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function updateMainImage(src) {
+            const mainImg = document.getElementById('main-display-image');
+            mainImg.style.opacity = '0';
+            setTimeout(() => {
+                mainImg.src = src;
+                mainImg.style.opacity = '1';
+            }, 200);
+        }
+    </script>
 </x-app-layout>

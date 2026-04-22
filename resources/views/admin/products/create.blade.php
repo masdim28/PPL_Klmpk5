@@ -87,9 +87,13 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Foto Produk (Maks 2MB)</label>
-                        <input type="file" name="image" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" required>
-                    </div>
+    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Unggah Galeri Foto (Pilih 1-5 Foto)</label>
+    <div class="p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+        <input type="file" name="images[]" multiple 
+               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer">
+        <p class="mt-2 text-[10px] text-gray-400 italic">* Tahan tombol 'Ctrl' (Windows) untuk memilih lebih dari satu foto.</p>
+    </div>
+</div>
 
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">Deskripsi</label>
