@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany; // Tambahkan ini
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 use App\Models\Category;
 use App\Models\CartItem;
 use App\Models\OrderItem;
+use App\Models\ProductImage; // Pastikan ini diimport jika ada model ProductImage
 
 class Product extends Model
 {
@@ -21,14 +22,14 @@ class Product extends Model
         'description',
         'price',
         'stock',
-        'status',
-        'category_id', // Tetap simpan ini jika ingin ada "Kategori Utama"
+        'status',   // Sudah ada untuk Ready/Sold Out
+        'clicks',   // TAMBAHKAN INI: Agar error "Unknown column clicks" hilang
+        'category_id',
         'image'
     ];
 
     /**
      * RELASI BARU: Satu produk bisa masuk ke banyak kategori (Many-to-Many)
-     * Ini yang memungkinkan produk muncul di SARIMBIT dan BEST SELLER sekaligus.
      */
     public function categories(): BelongsToMany
     {
@@ -52,8 +53,9 @@ class Product extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
-    public function images()
-{
-    return $this->hasMany(ProductImage::class);
-}
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class);
+    }
 }

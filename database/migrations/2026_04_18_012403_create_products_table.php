@@ -10,19 +10,22 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('products', function (Blueprint $table) {
-    $table->id();
-    $table->string('name');
-    $table->text('description')->nullable();
-    $table->integer('price');
-    $table->integer('stock')->default(0);
-    $table->enum('status', ['ready', 'sold_out'])->default('ready');
-    $table->foreignId('category_id')->constrained()->cascadeOnDelete();
-    $table->string('image')->nullable();
-    $table->timestamps();
-});
-    }
+{
+    Schema::create('products', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->integer('price');
+        $table->integer('stock');
+        $table->text('description')->nullable();
+        $table->string('image')->nullable();
+        
+        // TAMBAHKAN DUA BARIS INI
+        $table->integer('clicks')->default(0); 
+        $table->string('status')->default('ready'); 
+        
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.

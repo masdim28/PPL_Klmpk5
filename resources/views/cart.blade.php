@@ -25,31 +25,51 @@
         </div>
 
         @if($cart && $cart->items->count())
-            <form action="{{ route('checkout.index') }}" method="GET">
+            <form action="{{ route('checkout.index') }}" method="GET" id="cart-form">
                 <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
                     @foreach($cart->items as $item)
-                        <div class="flex items-center p-6 border-b border-gray-50 hover:bg-[#F1FBFD]/50 transition duration-300">
+                        @php $isSoldOut = $item->product->status == 'sold_out'; @endphp
+                        
+                        <div class="flex items-center p-6 border-b border-gray-50 {{ $isSoldOut ? 'bg-gray-50 opacity-75' : 'hover:bg-[#F1FBFD]/50' }} transition duration-300">
                             <div class="mr-6">
+                                {{-- Checkbox dimatikan jika barang sold out --}}
                                 <input type="checkbox" name="selected_items[]" value="{{ $item->id }}" 
-                                    class="item-checkbox w-5 h-5 text-[#CFB53B] rounded border-gray-300 focus:ring-[#CFB53B] cursor-pointer"
-                                    data-price="{{ $item->product->price * $item->qty }}">
+                                    class="item-checkbox w-5 h-5 text-[#CFB53B] rounded border-gray-300 focus:ring-[#CFB53B] {{ $isSoldOut ? 'cursor-not-allowed' : 'cursor-pointer' }}"
+                                    data-price="{{ $item->product->price * $item->qty }}"
+                                    {{ $isSoldOut ? 'disabled' : '' }}>
                             </div>
 
                             <div class="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div class="flex items-center space-x-4">
-                                    <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product->name }}" class="w-20 h-20 object-cover rounded-xl shadow-sm">
+                                    <div class="relative">
+                                        <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product->name }}" class="w-20 h-20 object-cover rounded-xl shadow-sm {{ $isSoldOut ? 'grayscale' : '' }}">
+                                        @if($isSoldOut)
+                                            <div class="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center">
+                                                <span class="text-[8px] text-white font-bold uppercase tracking-tighter">Habis</span>
+                                            </div>
+                                        @endif
+                                    </div>
                                     <div>
                                         <h4 class="font-bold text-gray-800 text-lg capitalize tracking-tight">{{ $item->product->name }}</h4>
-                                        <p class="text-[10px] text-[#CFB53B] font-bold uppercase tracking-widest mt-1 px-2 py-0.5 bg-[#F1FBFD] inline-block rounded">
-                                            Qty: {{ $item->qty }}
-                                        </p>
+                                        
+                                        @if($isSoldOut)
+                                            <p class="text-[10px] text-red-500 font-bold uppercase tracking-widest mt-1 animate-pulse">
+                                                Maaf, Produk Ini Baru Saja Habis
+                                            </p>
+                                        @else
+                                            <p class="text-[10px] text-[#CFB53B] font-bold uppercase tracking-widest mt-1 px-2 py-0.5 bg-[#F1FBFD] inline-block rounded">
+                                                Qty: {{ $item->qty }}
+                                            </p>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <p class="font-serif text-xl font-bold text-gray-800">
+                                    <p class="font-serif text-xl font-bold {{ $isSoldOut ? 'text-gray-400 line-through' : 'text-gray-800' }}">
                                         Rp {{ number_format($item->product->price * $item->qty, 0, ',', '.') }}
                                     </p>
-                                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mt-1">@ Rp {{ number_format($item->product->price, 0, ',', '.') }}</p>
+                                    @if(!$isSoldOut)
+                                        <p class="text-[10px] text-gray-400 uppercase tracking-widest mt-1">@ Rp {{ number_format($item->product->price, 0, ',', '.') }}</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -68,13 +88,14 @@
                             </svg>
                             Kembali Belanja
                         </a>
-                        <button type="submit" class="w-full md:w-auto bg-gray-900 text-white px-10 py-4 rounded-sm font-bold text-xs uppercase tracking-[0.3em] hover:bg-[#CFB53B] transition-all duration-500 shadow-xl">
+                        <button type="submit" id="checkout-btn" class="w-full md:w-auto bg-gray-900 text-white px-10 py-4 rounded-sm font-bold text-xs uppercase tracking-[0.3em] hover:bg-[#CFB53B] transition-all duration-500 shadow-xl disabled:bg-gray-300 disabled:cursor-not-allowed">
                             Checkout Sekarang
                         </button>
                     </div>
                 </div>
             </form>
         @else
+            {{-- Bagian Keranjang Kosong Tetap Sama --}}
             <div class="text-center py-24 bg-white rounded-2xl shadow-sm border border-dashed border-gray-200">
                 <div class="bg-[#F1FBFD] w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                     <svg class="h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,17 +116,31 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const checkboxes = document.querySelectorAll('.item-checkbox');
+            const checkboxes = document.querySelectorAll('.item-checkbox:not(:disabled)');
             const totalDisplay = document.getElementById('live-total');
+            const checkoutBtn = document.getElementById('checkout-btn');
 
             function calculateTotal() {
                 let total = 0;
+                let checkedCount = 0;
+
                 checkboxes.forEach(cb => {
                     if (cb.checked) {
                         total += parseInt(cb.getAttribute('data-price'));
+                        checkedCount++;
                     }
                 });
+
                 totalDisplay.innerText = 'Rp ' + total.toLocaleString('id-ID');
+                
+                // Disable button jika tidak ada item yang terpilih
+                if (checkedCount === 0) {
+                    checkoutBtn.disabled = true;
+                    checkoutBtn.classList.add('opacity-50');
+                } else {
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.classList.remove('opacity-50');
+                }
             }
 
             checkboxes.forEach(cb => {

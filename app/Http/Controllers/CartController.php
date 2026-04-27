@@ -12,9 +12,7 @@ class CartController extends Controller
 {
     public function index()
     {
-        // Mengambil data cart milik user yang sedang login beserta item dan produknya (Eager Loading)
         $cart = Cart::with('items.product')->where('user_id', Auth::id())->first();
-
         return view('cart', compact('cart'));
     }
 
@@ -22,7 +20,13 @@ class CartController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        // PERBAIKAN: Gunakan Auth::id() agar keranjang sesuai dengan user yang login
+        // --- LOGIKA TAMBAHAN: CEK STATUS PRODUK ---
+        // Jika status produk di database adalah sold_out, cegah penambahan
+        if ($product->status === 'sold_out') {
+            return redirect()->back()->with('error', 'Maaf, produk ini sudah habis dan tidak dapat ditambahkan ke keranjang.');
+        }
+        // ------------------------------------------
+
         $cart = Cart::firstOrCreate([
             'user_id' => Auth::id() 
         ]);

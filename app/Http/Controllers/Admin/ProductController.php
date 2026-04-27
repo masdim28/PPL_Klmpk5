@@ -24,49 +24,43 @@ class ProductController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'name'           => 'required',
-            'price'          => 'required|numeric',
-            'stock'          => 'required|numeric',
-            'category_ids'   => 'required|array',
-            'category_ids.*' => 'exists:categories,id',
-            'images'         => 'required|array|min:1|max:5', // Validasi minimal 1, maksimal 5
-            'images.*'       => 'image|mimes:jpeg,png,jpg|max:2048'
-        ]);
+{
+    $request->validate([
+        'name'           => 'required',
+        'price'          => 'required|numeric',
+        'stock'          => 'required|numeric',
+        'category_ids'   => 'required|array',
+        'category_ids.*' => 'exists:categories,id',
+        'images'         => 'required|array|min:1|max:5',
+        'images.*'       => 'image|mimes:jpeg,png,jpg|max:2048'
+    ]);
 
-        // 1. Buat Produk Dasar
-        $product = Product::create([
-            'name'        => $request->name,
-            'description' => $request->description,
-            'price'       => $request->price,
-            'stock'       => $request->stock,
-            'status'      => $request->status,
-            'category_id' => $request->category_ids[0], 
-        ]);
+    // 1. Buat Produk Dasar TANPA category_id
+    $product = Product::create([
+        'name'        => $request->name,
+        'description' => $request->description,
+        'price'       => $request->price,
+        'stock'       => $request->stock,
+        'status'      => $request->status,
+        // Hapus baris 'category_id' di sini karena kolomnya tidak ada di database
+    ]);
 
-        // 2. Simpan Relasi Kategori (Many-to-Many)
-        $product->categories()->attach($request->category_ids);
+    // 2. Simpan Relasi Kategori (Many-to-Many) ke tabel perantara
+    $product->categories()->attach($request->category_ids);
 
-        // 3. Simpan Banyak Gambar
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $index => $file) {
-                $path = $file->store('products', 'public');
-
-                // Gambar pertama (index 0) disimpan sebagai thumbnail utama di tabel products
-                if ($index === 0) {
-                    $product->update(['image' => $path]);
-                }
-
-                // Simpan semua gambar ke tabel product_images
-                $product->images()->create([
-                    'image_path' => $path
-                ]);
+    // 3. Simpan Banyak Gambar (Logika tetap sama)
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $index => $file) {
+            $path = $file->store('products', 'public');
+            if ($index === 0) {
+                $product->update(['image' => $path]);
             }
+            $product->images()->create(['image_path' => $path]);
         }
-
-        return redirect()->route('admin.products.index')->with('success', 'Produk dan galeri berhasil ditambahkan');
     }
+
+    return redirect()->route('admin.products.index')->with('success', 'Produk dan galeri berhasil ditambahkan');
+}
 
     public function edit($id)
     {
@@ -78,53 +72,49 @@ class ProductController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        $request->validate([
-            'name'         => 'required',
-            'price'        => 'required|numeric',
-            'stock'        => 'required|numeric',
-            'category_ids' => 'required|array',
-            'images.*'     => 'image|mimes:jpeg,png,jpg|max:2048'
-        ]);
+{
+    $request->validate([
+        'name'         => 'required',
+        'price'        => 'required|numeric',
+        'stock'        => 'required|numeric',
+        'category_ids' => 'required|array',
+        'images.*'     => 'image|mimes:jpeg,png,jpg|max:2048'
+    ]);
 
-        $product = Product::findOrFail($id);
+    $product = Product::findOrFail($id);
 
-        // Update data dasar
-        $product->update([
-            'name'        => $request->name,
-            'description' => $request->description,
-            'price'       => $request->price,
-            'stock'       => $request->stock,
-            'status'      => $request->status,
-            'category_id' => $request->category_ids[0],
-        ]);
+    // 1. Update data dasar TANPA category_id
+    $product->update([
+        'name'        => $request->name,
+        'description' => $request->description,
+        'price'       => $request->price,
+        'stock'       => $request->stock,
+        'status'      => $request->status,
+        // HAPUS BARIS 'category_id' => $request->category_ids[0], DI SINI!
+    ]);
 
-        // Sync Kategori
-        $product->categories()->sync($request->category_ids);
+    // 2. Sinkronisasi Kategori (Many-to-Many)
+    // Ini akan otomatis mengupdate tabel perantara 'category_product'
+    $product->categories()->sync($request->category_ids);
 
-        // Jika ada unggahan gambar baru
-        if ($request->hasFile('images')) {
-            // Opsional: Hapus gambar lama jika ingin mengganti total
-            foreach ($product->images as $oldImage) {
-                Storage::disk('public')->delete($oldImage->image_path);
-            }
-            $product->images()->delete();
-
-            // Simpan gambar-gambar baru
-            foreach ($request->file('images') as $index => $file) {
-                $path = $file->store('products', 'public');
-                
-                if ($index === 0) {
-                    $product->update(['image' => $path]);
-                }
-
-                $product->images()->create(['image_path' => $path]);
-            }
+    // 3. Logika update gambar (tetap seperti kode Anda sebelumnya)
+    if ($request->hasFile('images')) {
+        foreach ($product->images as $oldImage) {
+            Storage::disk('public')->delete($oldImage->image_path);
         }
+        $product->images()->delete();
 
-        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diperbarui');
+        foreach ($request->file('images') as $index => $file) {
+            $path = $file->store('products', 'public');
+            if ($index === 0) {
+                $product->update(['image' => $path]);
+            }
+            $product->images()->create(['image_path' => $path]);
+        }
     }
 
+    return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diperbarui');
+}
     public function destroy($id)
     {
         $product = Product::with('images')->findOrFail($id);

@@ -1,159 +1,135 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Produk | Admin Ade Afwa</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 flex">
+@extends('layouts.admin')
 
-    <aside class="w-64 bg-indigo-900 min-h-screen text-white p-6 hidden md:block">
-        <h2 class="text-2xl font-bold mb-10 tracking-widest italic text-center">ADE AFWA</h2>
-        <nav class="space-y-4">
-            <a href="{{ route('admin.dashboard') }}" class="block py-2.5 px-4 rounded hover:bg-indigo-800 transition text-sm">Dashboard</a>
-            <a href="{{ route('admin.products.index') }}" class="block py-2.5 px-4 rounded bg-indigo-800 shadow-lg transition text-sm font-semibold">Kelola Produk</a>
-        </nav>
-    </aside>
-
-    <main class="flex-1 p-8">
-        <div class="max-w-4xl mx-auto">
-            <div class="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-800">Edit Produk</h1>
-                    <p class="text-gray-500">Ubah detail koleksi: <span class="font-bold text-indigo-600">{{ $product->name }}</span></p>
-                </div>
-                <a href="{{ route('admin.products.index') }}" class="text-gray-400 hover:text-gray-600 font-medium">
-                    &times; Batal & Tutup
-                </a>
+@section('content')
+    <div class="max-w-4xl mx-auto">
+        {{-- Header Section --}}
+        <div class="mb-10 flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-black text-indigo-950 tracking-tighter uppercase italic">Perbarui Koleksi</h1>
+                <p class="text-indigo-400 font-medium italic mt-1">
+                    Sedang mengubah: <span class="text-indigo-900 font-black underline decoration-[#CFB53B] decoration-2">{{ $product->name }}</span>
+                </p>
             </div>
-
-            @if ($errors->any())
-                <div class="bg-red-500 text-white p-4 rounded-2xl mb-6 shadow-lg">
-                    <p class="font-bold mb-1">Terjadi kesalahan input:</p>
-                    <ul class="list-disc list-inside text-sm opacity-90">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <div class="bg-white rounded-3xl shadow-sm p-8 border border-gray-100">
-                <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" class="space-y-8">
-                    @csrf
-                    @method('PUT')
-                    
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Koleksi Produk</label>
-                        <input type="text" name="name" value="{{ old('name', $product->name) }}" 
-                               class="w-full px-5 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-gray-700 font-medium" 
-                               placeholder="Contoh: Gamis Silk Premium" required>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Harga Jual (Rp)</label>
-                            <input type="number" name="price" value="{{ old('price', $product->price) }}" 
-                                   class="w-full px-5 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-gray-700 font-medium" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Jumlah Stok</label>
-                            <input type="number" name="stock" value="{{ old('stock', $product->stock) }}" 
-                                   class="w-full px-5 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-gray-700 font-medium" required>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Pilih Kategori (Bisa lebih dari satu)</label>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                            @foreach($categories as $cat)
-                                <label class="flex items-center space-x-3 cursor-pointer group">
-                                    <div class="relative flex items-center">
-                                        <input type="checkbox" 
-                                               name="category_ids[]" 
-                                               value="{{ $cat->id }}" 
-                                               class="w-5 h-5 rounded-lg border-gray-300 text-indigo-600 focus:ring-indigo-500 transition cursor-pointer"
-                                               {{ in_array($cat->id, $product->categories->pluck('id')->toArray()) ? 'checked' : '' }}>
-                                    </div>
-                                    <span class="text-sm text-gray-600 group-hover:text-indigo-600 transition font-semibold uppercase tracking-tight">
-                                        {{ $cat->name }}
-                                    </span>
-                                </label>
-                            @endforeach
-                        </div>
-                        <p class="mt-3 text-xs text-gray-400 italic font-medium">* Centang kategori yang sesuai agar produk muncul di halaman terkait.</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-    <div>
-        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Update Foto Produk (Bisa Pilih 1-5 Foto)</label>
-        <div class="p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-            <div class="flex flex-wrap gap-2 mb-4">
-                @foreach($product->images as $img)
-                    <div class="relative group">
-                        <img src="{{ asset('storage/' . $img->image_path) }}" 
-                             class="w-16 h-16 object-cover rounded-lg shadow-sm border border-white">
-                        <div class="absolute inset-0 bg-black/40 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <span class="text-[8px] text-white font-bold uppercase">Stored</span>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-            
-            <input type="file" name="images[]" multiple 
-                   class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer">
-            <p class="mt-2 text-[9px] text-gray-400 italic leading-tight">
-                * Tahan tombol 'Ctrl' untuk memilih lebih dari 1 foto. <br>
-                * Mengunggah foto baru akan mengganti seluruh galeri lama.
-            </p>
-        </div>
-    </div>
-
-    <div>
-        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Status Ketersediaan</label>
-        <div class="relative">
-            <select name="status" class="w-full px-5 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-gray-700 font-bold appearance-none cursor-pointer">
-                <option value="ready" {{ $product->status == 'ready' ? 'selected' : '' }}>🟢 READY STOCK</option>
-                <option value="sold_out" {{ $product->status == 'sold_out' ? 'selected' : '' }}>🔴 SOLD OUT</option>
-            </select>
-            <div class="absolute inset-y-0 right-5 flex items-center pointer-events-none">
-                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            <a href="{{ route('admin.products.index') }}" class="bg-white p-3 rounded-2xl border border-indigo-50 shadow-sm text-gray-400 hover:text-red-500 transition-all hover:rotate-90 group">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
-            </div>
+            </a>
         </div>
-    </div>
-</div>
 
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Status Ketersediaan</label>
-                            <select name="status" class="w-full px-5 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-gray-700 font-bold appearance-none">
+        {{-- Error Handling --}}
+        @if ($errors->any())
+            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-2xl mb-8 shadow-sm">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-red-500 font-black text-lg">⚠️</span>
+                    <p class="font-black text-red-800 uppercase tracking-widest text-xs">Periksa Kembali Input Anda:</p>
+                </div>
+                <ul class="list-disc list-inside text-xs text-red-600/80 font-medium space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        {{-- Form Card --}}
+        <div class="bg-white rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.02)] p-10 border border-white">
+            <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" class="space-y-10">
+                @csrf
+                @method('PUT')
+                
+                {{-- Product Name --}}
+                <div>
+                    <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Nama Koleksi Eksklusif</label>
+                    <input type="text" name="name" value="{{ old('name', $product->name) }}" 
+                           class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-indigo-950 font-bold placeholder-indigo-200 shadow-inner transition-all" 
+                           placeholder="Contoh: Gamis Silk Premium" required>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    {{-- Price --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Harga Jual (IDR)</label>
+                        <input type="number" name="price" value="{{ old('price', $product->price) }}" 
+                               class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-[#CFB53B] font-black text-xl shadow-inner transition-all" required>
+                    </div>
+                    {{-- Stock --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Jumlah Stok</label>
+                        <input type="number" name="stock" value="{{ old('stock', $product->stock) }}" 
+                               class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-indigo-950 font-black text-xl shadow-inner transition-all" required>
+                    </div>
+                </div>
+
+                {{-- Categories --}}
+                <div>
+                    <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-5 ml-2">Pilih Kategori Produk</label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 p-8 bg-[#F1FBFD]/30 rounded-[2rem] border border-indigo-50">
+                        @foreach($categories as $cat)
+                            <label class="flex items-center space-x-3 cursor-pointer group">
+                                <input type="checkbox" name="category_ids[]" value="{{ $cat->id }}" 
+                                       class="w-5 h-5 rounded-lg border-indigo-100 text-[#CFB53B] focus:ring-[#CFB53B] transition cursor-pointer"
+                                       {{ in_array($cat->id, $product->categories->pluck('id')->toArray()) ? 'checked' : '' }}>
+                                <span class="text-xs text-indigo-900 group-hover:text-[#CFB53B] transition font-black uppercase tracking-tight">
+                                    {{ $cat->name }}
+                                </span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    {{-- Images --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Update Galeri Foto</label>
+                        <div class="p-6 bg-[#F1FBFD]/30 rounded-[2rem] border border-dashed border-indigo-100">
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                @foreach($product->images as $img)
+                                    <div class="relative group">
+                                        <img src="{{ asset('storage/' . $img->image_path) }}" class="w-12 h-12 object-cover rounded-xl shadow-sm border-2 border-white">
+                                        <div class="absolute inset-0 bg-indigo-950/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span class="text-[6px] text-white font-black uppercase">Stored</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <input type="file" name="images[]" multiple 
+                                   class="block w-full text-[10px] text-indigo-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-[#CFB53B] file:text-indigo-950 hover:file:bg-[#b89f33] cursor-pointer">
+                        </div>
+                    </div>
+
+                    {{-- Status --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Status Ketersediaan</label>
+                        <div class="relative">
+                            <select name="status" class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-indigo-900 font-black uppercase text-xs tracking-widest appearance-none cursor-pointer shadow-inner">
                                 <option value="ready" {{ $product->status == 'ready' ? 'selected' : '' }}>🟢 READY STOCK</option>
                                 <option value="sold_out" {{ $product->status == 'sold_out' ? 'selected' : '' }}>🔴 SOLD OUT</option>
                             </select>
                         </div>
                     </div>
+                </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Deskripsi Singkat</label>
-                        <textarea name="description" rows="4" 
-                                  class="w-full px-5 py-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-indigo-500 outline-none text-gray-600 leading-relaxed" 
-                                  placeholder="Jelaskan detail bahan atau ukuran koleksi ini...">{{ old('description', $product->description) }}</textarea>
-                    </div>
+                {{-- Description --}}
+                <div>
+                    <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Deskripsi Produk</label>
+                    <textarea name="description" rows="5" 
+                              class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-indigo-900 font-medium italic shadow-inner transition-all" 
+                              placeholder="Tuliskan keistimewaan bahan dan desain koleksi ini...">{{ old('description', $product->description) }}</textarea>
+                </div>
 
-                    <div class="pt-6 flex flex-col md:flex-row gap-4">
-                        <button type="submit" class="flex-1 bg-indigo-900 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-indigo-800 shadow-xl shadow-indigo-100 transition-all active:scale-95">
-                            Simpan Perubahan Data
-                        </button>
-                        <a href="{{ route('admin.products.index') }}" class="px-10 py-4 bg-gray-100 text-gray-400 rounded-2xl font-bold text-sm uppercase tracking-widest text-center hover:bg-gray-200 transition">
-                            Batal
-                        </a>
-                    </div>
-                </form>
-            </div>
+                {{-- Actions --}}
+                <div class="pt-6 flex flex-col md:flex-row gap-4">
+                    <button type="submit" class="flex-1 bg-indigo-950 text-white py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] hover:bg-[#CFB53B] hover:text-indigo-950 shadow-2xl shadow-indigo-100 transition-all active:scale-95 transform">
+                        Simpan Perubahan
+                    </button>
+                    <a href="{{ route('admin.products.index') }}" class="px-10 py-5 bg-white text-indigo-300 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] text-center hover:bg-red-50 hover:text-red-400 transition-all border border-indigo-50">
+                        Batalkan
+                    </a>
+                </div>
+            </form>
         </div>
-    </main>
-
-</body>
-</html>
+        
+        <p class="text-center mt-10 text-[10px] font-black text-indigo-200 uppercase tracking-[0.5em]">Ade Afwa Boutique</p>
+    </div>
+@endsection

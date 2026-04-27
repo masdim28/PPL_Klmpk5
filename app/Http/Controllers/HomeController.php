@@ -70,8 +70,13 @@ class HomeController extends Controller
 
     public function detail($id)
     {
-        // Tambahkan with('categories') agar di halaman detail user juga muncul kategorinya
+        // Tambahkan with('categories') agar muncul kategorinya
         $product = Product::with('categories')->findOrFail($id);
+        
+        // --- LOGIKA BARU UNTUK DASHBOARD ---
+        // Setiap kali halaman detail dibuka, jumlah klik bertambah 1
+        $product->increment('clicks'); 
+        
         return view('detail', compact('product'));
     }
 }

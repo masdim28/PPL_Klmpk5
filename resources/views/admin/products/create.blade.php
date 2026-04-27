@@ -1,122 +1,152 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Koleksi | Admin Ade Afwa</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
+@extends('layouts.admin')
+
+@section('content')
+    {{-- TomSelect CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <style>
-        /* Penyesuaian agar senada dengan UI Anda */
-        .ts-control { border-radius: 0.75rem !important; padding: 0.75rem !important; border-color: #e5e7eb !important; }
-        .ts-control .item { background-color: #4338ca !important; color: white !important; border-radius: 0.5rem !important; }
+        .ts-control { border-radius: 1.25rem !important; padding: 1rem 1.5rem !important; border: none !important; background-color: #F1FBFD !important; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.03) !important; }
+        .ts-control .item { background-color: #CFB53B !important; color: #1e1b4b !important; border-radius: 0.75rem !important; font-weight: 800; font-size: 10px; text-transform: uppercase; padding: 4px 12px !important; }
+        .ts-dropdown { border-radius: 1.25rem !important; border: 1px solid #e0e7ff !important; box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.05) !important; margin-top: 8px !important; }
+        .ts-dropdown .active { background-color: #F1FBFD !important; color: #4338ca !important; }
     </style>
-</head>
-<body class="bg-gray-100 flex">
 
-    <aside class="w-64 bg-indigo-900 min-h-screen text-white p-6 hidden md:block">
-        <h2 class="text-2xl font-bold mb-10 tracking-widest italic text-center">ADE AFWA</h2>
-        <nav class="space-y-4">
-            <a href="{{ route('admin.dashboard') }}" class="block py-2.5 px-4 rounded hover:bg-indigo-800 transition">Dashboard</a>
-            <a href="{{ route('admin.products.index') }}" class="block py-2.5 px-4 rounded bg-indigo-800 shadow-lg transition">Kelola Produk</a>
-        </nav>
-    </aside>
-
-    <main class="flex-1 p-8">
-        <div class="max-w-3xl mx-auto">
-            <div class="mb-10">
-                <h1 class="text-3xl font-bold text-gray-800">Tambah Produk Baru</h1>
-                <p class="text-gray-500">Isi data di bawah ini untuk menambah katalog butik.</p>
-            </div>
-
-            @if ($errors->any())
-                <div class="bg-red-500 text-white p-4 rounded-xl mb-6 shadow-lg">
-                    <strong class="block mb-2 font-bold text-lg">Gagal Menyimpan:</strong>
-                    <ul class="list-disc list-inside text-sm">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <div class="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
-                <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-                    @csrf
-                    
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Nama Produk</label>
-                        <input type="text" name="name" value="{{ old('name') }}" placeholder="Misal: Gamis Silk" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none" required>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Harga (Tanpa Titik)</label>
-                            <input type="number" name="price" value="{{ old('price') }}" placeholder="Contoh: 250000" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Stok</label>
-                            <input type="number" name="stock" value="{{ old('stock') }}" placeholder="10" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none" required>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Kategori (Bisa pilih 2-3)</label>
-                            <select id="category-select" name="category_ids[]" multiple placeholder="Pilih kategori..." class="w-full" required autocomplete="off">
-                                @foreach($categories as $parent)
-                                    <option value="{{ $parent->id }}" {{ (collect(old('category_ids'))->contains($parent->id)) ? 'selected' : '' }}>
-                                        📂 {{ strtoupper($parent->name) }} (Utama)
-                                    </option>
-                                    @foreach($parent->children as $child)
-                                        <option value="{{ $child->id }}" {{ (collect(old('category_ids'))->contains($child->id)) ? 'selected' : '' }}>
-                                            └─ {{ $child->name }}
-                                        </option>
-                                    @endforeach
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Status</label>
-                            <select name="status" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none">
-                                <option value="ready" {{ old('status') == 'ready' ? 'selected' : '' }}>Ready</option>
-                                <option value="sold_out" {{ old('status') == 'sold_out' ? 'selected' : '' }}>Sold Out</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Unggah Galeri Foto (Pilih 1-5 Foto)</label>
-    <div class="p-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-        <input type="file" name="images[]" multiple 
-               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer">
-        <p class="mt-2 text-[10px] text-gray-400 italic">* Tahan tombol 'Ctrl' (Windows) untuk memilih lebih dari satu foto.</p>
-    </div>
-</div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Deskripsi</label>
-                        <textarea name="description" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none">{{ old('description') }}</textarea>
-                    </div>
-
-                    <div class="pt-4 flex gap-4">
-                        <button type="submit" class="flex-1 bg-indigo-900 text-white py-3 rounded-xl font-bold hover:bg-indigo-800 shadow-lg transition">Simpan Produk</button>
-                        <a href="{{ route('admin.products.index') }}" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-center">Batal</a>
-                    </div>
-                </form>
-            </div>
+    <div class="max-w-4xl mx-auto">
+        {{-- Header --}}
+        <div class="mb-10">
+            <h1 class="text-4xl font-black text-indigo-950 tracking-tighter uppercase italic">Tambah Produk Baru</h1>
+            <p class="text-indigo-400 font-medium italic mt-1">Lengkapi detail di bawah untuk menambah katalog eksklusif butik.</p>
         </div>
-    </main>
 
+        {{-- Validation Errors --}}
+        @if ($errors->any())
+            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-2xl mb-8 shadow-sm">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-red-500 font-black text-lg">⚠️</span>
+                    <p class="font-black text-red-800 uppercase tracking-widest text-xs">Gagal Menyimpan Data:</p>
+                </div>
+                <ul class="list-disc list-inside text-xs text-red-600/80 font-medium space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        {{-- Form Card --}}
+        <div class="bg-white rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.02)] p-10 border border-white">
+            <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+                @csrf
+                
+                {{-- Product Name --}}
+                <div>
+                    <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Nama Koleksi Eksklusif</label>
+                    <input type="text" name="name" value="{{ old('name') }}" 
+                           placeholder="Contoh: Gamis Silk Premium" 
+                           class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-indigo-950 font-bold shadow-inner transition-all" required>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {{-- Price --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Harga Jual (IDR)</label>
+                        <input type="number" name="price" value="{{ old('price') }}" 
+                               placeholder="250000" 
+                               class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-[#CFB53B] font-black text-xl shadow-inner" required>
+                    </div>
+                    {{-- Stock --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Jumlah Stok</label>
+                        <input type="number" name="stock" value="{{ old('stock') }}" 
+                               placeholder="10" 
+                               class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-indigo-950 font-black text-xl shadow-inner" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {{-- Categories with TomSelect --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Kategori (Maks. 3)</label>
+                        <select id="category-select" name="category_ids[]" multiple placeholder="Pilih kategori..." class="w-full shadow-inner" required>
+                            @foreach($categories as $parent)
+                                <option value="{{ $parent->id }}" {{ (collect(old('category_ids'))->contains($parent->id)) ? 'selected' : '' }}>
+                                    📂 {{ strtoupper($parent->name) }}
+                                </option>
+                                @foreach($parent->children as $child)
+                                    <option value="{{ $child->id }}" {{ (collect(old('category_ids'))->contains($child->id)) ? 'selected' : '' }}>
+                                        └─ {{ $child->name }}
+                                    </option>
+                                @endforeach
+                            @endforeach
+                        </select>
+                    </div>
+                    {{-- Status --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Status Stok</label>
+                        <div class="relative">
+                            <select name="status" class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-indigo-950 font-black uppercase text-xs tracking-widest appearance-none shadow-inner cursor-pointer">
+                                <option value="ready" {{ old('status') == 'ready' ? 'selected' : '' }}>🟢 Ready Stock</option>
+                                <option value="sold_out" {{ old('status') == 'sold_out' ? 'selected' : '' }}>🔴 Sold Out</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Photo Upload --}}
+                <div>
+                    <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Unggah Galeri Foto (1-5 Foto)</label>
+                    <div class="p-10 bg-[#F1FBFD]/30 rounded-[2.5rem] border-2 border-dashed border-indigo-100 flex flex-col items-center group hover:border-[#CFB53B] transition-colors">
+                        <div class="mb-4 p-4 bg-white rounded-full shadow-sm text-indigo-200 group-hover:text-[#CFB53B] transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <input type="file" name="images[]" multiple 
+                               class="block w-full text-xs text-indigo-300 file:mr-4 file:py-2 file:px-6 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-[#CFB53B] file:text-indigo-950 hover:file:bg-[#b89f33] cursor-pointer">
+                        <p class="mt-4 text-[9px] text-indigo-300 italic font-medium uppercase tracking-widest">Tahan 'Ctrl' untuk memilih banyak foto sekaligus</p>
+                    </div>
+                </div>
+
+                {{-- Description --}}
+                <div>
+                    <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Deskripsi Produk</label>
+                    <textarea name="description" rows="4" 
+                              class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-indigo-900 font-medium italic shadow-inner transition-all" 
+                              placeholder="Jelaskan keanggunan bahan dan detail desain produk ini...">{{ old('description') }}</textarea>
+                </div>
+
+                {{-- Action Buttons --}}
+                <div class="pt-6 flex flex-col md:flex-row gap-4">
+                    <button type="submit" class="flex-1 bg-indigo-950 text-white py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] hover:bg-[#CFB53B] hover:text-indigo-950 shadow-2xl shadow-indigo-100 transition-all active:scale-95 transform">
+                        Simpan Koleksi
+                    </button>
+                    <a href="{{ route('admin.products.index') }}" class="px-10 py-5 bg-white text-indigo-300 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] text-center hover:bg-red-50 hover:text-red-400 transition-all border border-indigo-50">
+                        Batal
+                    </a>
+                </div>
+            </form>
+        </div>
+        
+        <p class="text-center mt-10 text-[10px] font-black text-indigo-200 uppercase tracking-[0.5em]">Umimasta Project • Informatics 2388010027</p>
+    </div>
+
+    {{-- TomSelect JS --}}
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
-        new TomSelect("#category-select", {
-            maxItems: 3, // Batasi maksimal 3 kategori agar tidak berlebihan
-            plugins: ['remove_button'], // Tombol 'x' untuk menghapus pilihan
-            persist: false,
-            create: false,
+        document.addEventListener("DOMContentLoaded", function() {
+            new TomSelect("#category-select", {
+                maxItems: 3,
+                plugins: ['remove_button'],
+                persist: false,
+                create: false,
+                render: {
+                    option: function(data, escape) {
+                        return '<div class="px-4 py-2 font-bold text-xs uppercase tracking-tight">' + escape(data.text) + '</div>';
+                    },
+                    item: function(data, escape) {
+                        return '<div class="flex items-center">' + escape(data.text) + '</div>';
+                    }
+                }
+            });
         });
     </script>
-</body>
-</html>
+@endsection

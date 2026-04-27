@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="py-12 bg-[#F1FBFD] min-h-screen">
+    <div class="pt-6 pb-12 bg-[#F1FBFD] min-h-screen">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             
             <div class="mb-8">
@@ -62,34 +62,49 @@
                             </p>
                         </div>
 
-                        <div class="flex items-center gap-4 mb-10">
-                            <div class="bg-[#F1FBFD] border border-[#CFB53B]/20 px-5 py-3 rounded-lg">
-                                <span class="text-[9px] text-[#CFB53B] uppercase block font-bold tracking-widest mb-1">Status Ketersediaan</span>
-                                <span class="text-gray-800 font-bold flex items-center gap-2">
-                                    <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                                    {{ $product->stock }} Item Tersedia
-                                </span>
-                            </div>
-                        </div>
+                        <div class="bg-[#F1FBFD] border border-[#CFB53B]/20 px-5 py-3 rounded-lg">
+    <span class="text-[9px] text-[#CFB53B] uppercase block font-bold tracking-widest mb-1">Status Ketersediaan</span>
+    <span class="text-gray-800 font-bold flex items-center gap-2">
+        @if($product->status == 'sold_out')
+            <span class="h-2 w-2 rounded-full bg-red-500"></span>
+            Stok Habis
+        @else
+            <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+            {{ $product->stock }} Item Tersedia
+        @endif
+    </span>
+</div>
 
                         <div class="space-y-4">
-                            <form action="/cart/add/{{ $product->id }}" method="POST">
-                                @csrf
-                                <button type="submit" class="w-full bg-gray-900 text-white py-5 rounded-sm font-bold text-xs uppercase tracking-[0.3em] hover:bg-[#CFB53B] transition-all duration-500 shadow-xl flex justify-center items-center gap-3">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 11-8 0v4M5 9h14l1 12H4L5 9z" />
-                                    </svg>
-                                    Tambah ke Keranjang
-                                </button>
-                            </form>
-                            
-                            <div class="flex items-center justify-center gap-3 text-[9px] text-gray-400 uppercase tracking-widest pt-6 border-t border-gray-50">
-                                <svg class="w-4 h-4 text-[#CFB53B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                                </svg>
-                                Jaminan Kualitas Ade Afwa Boutique
-                            </div>
-                        </div>
+    {{-- Logika pencegahan tambah ke keranjang --}}
+    @if($product->status == 'sold_out')
+        {{-- Tampilan saat stok habis: Tombol dinonaktifkan (disabled) --}}
+        <button type="button" class="w-full bg-gray-400 text-white py-5 rounded-sm font-bold text-xs uppercase tracking-[0.3em] cursor-not-allowed shadow-xl flex justify-center items-center gap-3" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Stok Habis
+        </button>
+    @else
+        {{-- Tampilan saat stok tersedia: Form aktif --}}
+        <form action="/cart/add/{{ $product->id }}" method="POST">
+            @csrf
+            <button type="submit" class="w-full bg-gray-900 text-white py-5 rounded-sm font-bold text-xs uppercase tracking-[0.3em] hover:bg-[#CFB53B] transition-all duration-500 shadow-xl flex justify-center items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 11-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                Tambah ke Keranjang
+            </button>
+        </form>
+    @endif
+    
+    <div class="flex items-center justify-center gap-3 text-[9px] text-gray-400 uppercase tracking-widest pt-6 border-t border-gray-50">
+        <svg class="w-4 h-4 text-[#CFB53B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+        Jaminan Kualitas Ade Afwa Boutique
+    </div>
+</div>
                     </div>
 
                 </div>

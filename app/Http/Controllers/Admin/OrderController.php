@@ -8,12 +8,12 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    // 1. Menu Transaksi (Menggunakan kolom status_payment)
-    public function transaksi() {
-        // Sesuaikan 'unpaid' dengan value yang kamu gunakan di database
-        $orders = Order::where('status_payment', 'unpaid')->latest()->get();
-        return view('admin.orders.transaksi', compact('orders'));
-    }
+    // 1. Menu Transaksi
+public function transaksi() {
+    // Ubah 'unpaid' menjadi 'pending' sesuai database
+    $orders = Order::where('status_payment', 'pending')->latest()->get();
+    return view('admin.orders.transaksi', compact('orders'));
+}
 
     public function konfirmasiPembayaran($id) {
         $order = Order::findOrFail($id);
@@ -25,13 +25,15 @@ class OrderController extends Controller
         return back()->with('success', 'Pembayaran dikonfirmasi!');
     }
 
-    // 2. Menu Pesanan (Menggunakan kolom status_shipping)
-    public function pesanan() {
-        $orders = Order::where('status_payment', 'paid')
-                      ->where('status_shipping', '!=', 'completed')
-                      ->latest()->get();
-        return view('admin.orders.pesanan', compact('orders'));
-    }
+   // 2. Menu Pesanan
+public function pesanan() {
+    // Sesuaikan logika jika Anda ingin menampilkan pesanan yang sudah dibayar
+    // Atau jika ingin menampilkan yang masih pending, ubah status_payment-nya
+    $orders = Order::where('status_payment', 'paid')
+                  ->where('status_shipping', '!=', 'completed')
+                  ->latest()->get();
+    return view('admin.orders.pesanan', compact('orders'));
+}
 
     public function updateResi(Request $request, $id) {
         $order = Order::findOrFail($id);
