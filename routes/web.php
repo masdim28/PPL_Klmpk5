@@ -41,7 +41,7 @@ Route::middleware('auth')->group(function () {
     // Keranjang Belanja
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
-
+    Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
     // Proses Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index'); 
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');

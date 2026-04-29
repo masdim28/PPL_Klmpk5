@@ -8,6 +8,10 @@
         .ts-control .item { background-color: #CFB53B !important; color: #1e1b4b !important; border-radius: 0.75rem !important; font-weight: 800; font-size: 10px; text-transform: uppercase; padding: 4px 12px !important; }
         .ts-dropdown { border-radius: 1.25rem !important; border: 1px solid #e0e7ff !important; box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.05) !important; margin-top: 8px !important; }
         .ts-dropdown .active { background-color: #F1FBFD !important; color: #4338ca !important; }
+        
+        /* Custom Style for Variant Rows */
+        .variant-row { transition: all 0.3s ease; }
+        .variant-row:hover { background-color: #f8fafc; }
     </style>
 
     <div class="max-w-4xl mx-auto">
@@ -53,9 +57,9 @@
                                placeholder="250000" 
                                class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-[#CFB53B] font-black text-xl shadow-inner" required>
                     </div>
-                    {{-- Stock --}}
+                    {{-- General Stock (Total) --}}
                     <div>
-                        <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Jumlah Stok</label>
+                        <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Total Stok Keseluruhan</label>
                         <input type="number" name="stock" value="{{ old('stock') }}" 
                                placeholder="10" 
                                class="w-full px-6 py-5 rounded-2xl bg-[#F1FBFD]/50 border-none focus:ring-2 focus:ring-[#CFB53B] outline-none text-indigo-950 font-black text-xl shadow-inner" required>
@@ -63,7 +67,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {{-- Categories with TomSelect --}}
+                    {{-- Categories --}}
                     <div>
                         <label class="block text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-3 ml-2">Kategori (Maks. 3)</label>
                         <select id="category-select" name="category_ids[]" multiple placeholder="Pilih kategori..." class="w-full shadow-inner" required>
@@ -87,6 +91,34 @@
                                 <option value="ready" {{ old('status') == 'ready' ? 'selected' : '' }}>🟢 Ready Stock</option>
                                 <option value="sold_out" {{ old('status') == 'sold_out' ? 'selected' : '' }}>🔴 Sold Out</option>
                             </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- VARIANT SECTION --}}
+                <div class="p-8 bg-gray-50 rounded-[2rem] border border-gray-100">
+                    <div class="flex justify-between items-center mb-6">
+                        <label class="block text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] ml-2">Manajemen Varian (Warna & Ukuran)</label>
+                        <button type="button" onclick="addVariantRow()" class="bg-[#CFB53B] text-indigo-950 px-4 py-2 rounded-xl font-black text-[9px] uppercase tracking-wider hover:bg-indigo-950 hover:text-white transition-all">
+                            + Tambah Varian
+                        </button>
+                    </div>
+
+                    <div id="variant-container" class="space-y-4">
+                        {{-- Row Varian Pertama (Default) --}}
+                        <div class="variant-row grid grid-cols-12 gap-3 p-4 bg-white rounded-2xl shadow-sm items-center border border-transparent">
+                            <div class="col-span-4">
+                                <input type="text" name="variants[0][color]" placeholder="Warna (ex: Merah)" class="w-full px-4 py-3 rounded-xl bg-gray-50 border-none text-xs font-bold focus:ring-1 focus:ring-[#CFB53B]">
+                            </div>
+                            <div class="col-span-3">
+                                <input type="text" name="variants[0][size]" placeholder="Ukuran (ex: XL)" class="w-full px-4 py-3 rounded-xl bg-gray-50 border-none text-xs font-bold focus:ring-1 focus:ring-[#CFB53B]">
+                            </div>
+                            <div class="col-span-3">
+                                <input type="number" name="variants[0][stock]" placeholder="Stok" class="w-full px-4 py-3 rounded-xl bg-gray-50 border-none text-xs font-bold focus:ring-1 focus:ring-[#CFB53B]">
+                            </div>
+                            <div class="col-span-2 text-right">
+                                <span class="text-gray-300 text-[10px] font-bold">Wajib</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -133,6 +165,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Initialize TomSelect
             new TomSelect("#category-select", {
                 maxItems: 3,
                 plugins: ['remove_button'],
@@ -148,5 +181,29 @@
                 }
             });
         });
+
+        // Dynamic Variant Management
+        let variantIdx = 1;
+        function addVariantRow() {
+            const container = document.getElementById('variant-container');
+            const newRow = document.createElement('div');
+            newRow.className = 'variant-row grid grid-cols-12 gap-3 p-4 bg-white rounded-2xl shadow-sm items-center border border-indigo-50';
+            newRow.innerHTML = `
+                <div class="col-span-4">
+                    <input type="text" name="variants[${variantIdx}][color]" placeholder="Warna" class="w-full px-4 py-3 rounded-xl bg-gray-50 border-none text-xs font-bold focus:ring-1 focus:ring-[#CFB53B]">
+                </div>
+                <div class="col-span-3">
+                    <input type="text" name="variants[${variantIdx}][size]" placeholder="Ukuran" class="w-full px-4 py-3 rounded-xl bg-gray-50 border-none text-xs font-bold focus:ring-1 focus:ring-[#CFB53B]">
+                </div>
+                <div class="col-span-3">
+                    <input type="number" name="variants[${variantIdx}][stock]" placeholder="Stok" class="w-full px-4 py-3 rounded-xl bg-gray-50 border-none text-xs font-bold focus:ring-1 focus:ring-[#CFB53B]">
+                </div>
+                <div class="col-span-2 text-right">
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400 hover:text-red-600 font-black text-[10px] uppercase">Hapus</button>
+                </div>
+            `;
+            container.appendChild(newRow);
+            variantIdx++;
+        }
     </script>
 @endsection

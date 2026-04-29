@@ -28,6 +28,10 @@ class Product extends Model
         'image'
     ];
 
+
+    public function variants() {
+    return $this->hasMany(ProductVariant::class);
+}
     /**
      * RELASI BARU: Satu produk bisa masuk ke banyak kategori (Many-to-Many)
      */

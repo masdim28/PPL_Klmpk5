@@ -25,7 +25,7 @@
         </div>
 
         {{-- Main Detail Card --}}
-        <div class="bg-white rounded-[3rem] shadow-[0_30px_80px_rgba(0,0,0,0.04)] border border-white overflow-hidden">
+        <div class="bg-white rounded-[3rem] shadow-[0_30px_80px_rgba(0,0,0,0.04)] border border-white overflow-hidden mb-10">
             <div class="flex flex-col lg:flex-row">
                 
                 {{-- Product Visuals --}}
@@ -40,6 +40,11 @@
                         </div>
                         
                         <div class="flex flex-wrap gap-4 justify-center relative z-20">
+                            {{-- Foto Utama juga bisa diklik --}}
+                            <img src="{{ asset('storage/' . $product->image) }}" 
+                                 onclick="changeImage('{{ asset('storage/' . $product->image) }}')"
+                                 class="w-20 h-20 rounded-2xl cursor-pointer hover:scale-110 hover:ring-4 hover:ring-[#CFB53B] transition-all border-4 border-white shadow-xl object-cover bg-white">
+                            
                             @foreach($product->images as $img)
                                 <img src="{{ asset('storage/' . $img->image_path) }}" 
                                      onclick="changeImage('{{ asset('storage/' . $img->image_path) }}')"
@@ -94,12 +99,41 @@
                             </div>
                         </div>
 
+                        {{-- PENAMBAHAN: Rincian Varian --}}
+                        <div class="pt-10 border-t border-gray-100">
+                            <label class="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-4 block">Tersedia dalam Varian</label>
+                            <div class="overflow-hidden rounded-2xl border border-indigo-50">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-indigo-50/50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-[9px] font-black text-indigo-400 uppercase tracking-widest">Warna</th>
+                                            <th class="px-4 py-3 text-[9px] font-black text-indigo-400 uppercase tracking-widest">Ukuran</th>
+                                            <th class="px-4 py-3 text-[9px] font-black text-indigo-400 uppercase tracking-widest text-right">Stok</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-indigo-50">
+                                        @forelse($product->variants as $variant)
+                                            <tr class="hover:bg-[#F1FBFD]/50 transition-colors">
+                                                <td class="px-4 py-3 text-xs font-bold text-indigo-950 uppercase italic">{{ $variant->color }}</td>
+                                                <td class="px-4 py-3 text-xs font-bold text-indigo-950 uppercase">{{ $variant->size }}</td>
+                                                <td class="px-4 py-3 text-xs font-black text-indigo-950 text-right">{{ $variant->stock }}</td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="3" class="px-4 py-6 text-center text-xs italic text-gray-400">Tidak ada rincian varian.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         {{-- Description --}}
                         <div class="pt-10 border-t border-gray-100">
                             <label class="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-4 block">Product Essence</label>
                             <div class="relative">
                                 <span class="absolute -top-4 -left-2 text-6xl text-indigo-50 font-serif">"</span>
-                                <p class="relative z-10 text-indigo-900/70 leading-relaxed text-xl font-medium italic">
+                                <p class="relative z-10 text-indigo-900/70 leading-relaxed text-lg font-medium italic">
                                     {{ $product->description ?: 'Keanggunan dalam setiap jahitan. Koleksi eksklusif ini dirancang khusus untuk kenyamanan dan estetika terbaik di Ade Afwa Boutique.' }}
                                 </p>
                             </div>
